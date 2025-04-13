@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, CircleMarker, Tooltip } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useNewsStore } from '../store';
@@ -159,7 +159,7 @@ const supportedCountries = [
   { name: 'Sierra Leone', coords: [8.460555, -11.779889] },
   { name: 'Singapore', coords: [1.352083, 103.819836] },
   { name: 'Slovakia', coords: [48.669026, 19.699024] },
-  { name: 'Slovenia', coords: [46.151241, 14.995463] },
+  { name:  'Slovenia', coords: [46.151241, 14.995463] },
   { name: 'Solomon Islands', coords: [-9.64571, 160.156194] },
   { name: 'Somalia', coords: [5.152149, 46.199616] },
   { name: 'South Africa', coords: [-30.559482, 22.937506] },
@@ -202,6 +202,16 @@ const supportedCountries = [
 
 const WorldMap = () => {
   const { selectedCountry, setSelectedCountry, darkMode } = useNewsStore();
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     // Fix for Leaflet icon paths
@@ -209,10 +219,10 @@ const WorldMap = () => {
   }, []);
 
   return (
-    <div className={`w-[1000px] h-[450px] ${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md p-4 relative mb-8 z-0 mx-auto mt-20`}>
+    <div className={`w-full sm:w-[1000px] h-[300px] sm:h-[450px] ${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-md p-2 sm:p-4 relative mb-8 z-0 mx-auto mt-4 sm:mt-20`}>
       <MapContainer
         center={[20, 0]}
-        zoom={1}
+        zoom={isMobile ? 0 : 1}
         style={{ height: '100%', width: '100%', background: darkMode ? '#1F2937' : '#ffffff' }}
         attributionControl={false}
         className="z-0"
@@ -230,7 +240,7 @@ const WorldMap = () => {
           <CircleMarker
             key={country.name}
             center={country.coords as [number, number]}
-            radius={selectedCountry === country.name ? 8 : 6}
+            radius={selectedCountry === country.name ? (isMobile ? 4 : 8) : (isMobile ? 3 : 6)}
             eventHandlers={{
               click: () => setSelectedCountry(selectedCountry === country.name ? null : country.name),
             }}

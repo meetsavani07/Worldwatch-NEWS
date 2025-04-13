@@ -33,8 +33,10 @@ function App() {
       <div className={`min-h-screen w-full ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
         <Header />
         
-        <main className="container mx-auto px-4 py-8 max-w-7xl mt-28">
-          <WorldMap />
+        <main className="container mx-auto px-4 py-8 max-w-7xl mt-16 sm:mt-28">
+          <div className="max-w-full overflow-x-auto">
+            <WorldMap />
+          </div>
           
           <div className="mt-8">
             {selectedCountry && (
@@ -60,7 +62,7 @@ function App() {
               <p className="text-lg">No articles found. Try adjusting your search criteria.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-6">
               {articles.map((article) => (
                 <ArticleCard key={article.id} article={article} />
               ))}

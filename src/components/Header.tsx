@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Bookmark, Moon, Newspaper, Search, Sun, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Bookmark, Moon, Newspaper, Search, Sun, ChevronLeft, ChevronRight, Menu, X } from 'lucide-react';
 import { useNewsStore } from '../store';
 import { useEffect, useState, useRef } from 'react';
 
@@ -40,6 +40,8 @@ export function Header() {
 
   const [prevScrollPos, setPrevScrollPos] = useState(0);
   const [visible, setVisible] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const navRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -72,14 +74,23 @@ export function Header() {
       <div className="container mx-auto px-4 max-w-7xl">
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center space-x-2">
-            <Newspaper className={`h-8 w-8 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
-            <span className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-              WorldWatch News
+            <Newspaper className={`h-6 w-6 sm:h-8 sm:w-8 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
+            <span className={`text-lg sm:text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              WorldWatch
             </span>
           </Link>
           
-          <div className="flex items-center space-x-4">
-            <div className="relative">
+          <div className="flex items-center space-x-2 sm:space-x-4">
+            {/* Mobile Search Toggle */}
+            <button
+              onClick={() => setSearchOpen(!searchOpen)}
+              className="sm:hidden p-2"
+            >
+              <Search className={`h-5 w-5 ${darkMode ? 'text-gray-200' : 'text-gray-600'}`} />
+            </button>
+
+            {/* Desktop Search */}
+            <div className="hidden sm:block relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
               <input
                 type="text"
@@ -91,6 +102,27 @@ export function Header() {
                 } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
+            </div>
+            
+            {/* Mobile Search Input */}
+            <div className={`absolute top-16 left-0 right-0 p-4 ${
+              darkMode ? 'bg-gray-800' : 'bg-white'
+            } border-b ${
+              darkMode ? 'border-gray-700' : 'border-gray-200'
+            } ${searchOpen ? 'block' : 'hidden'} sm:hidden`}>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                <input
+                  type="text"
+                  placeholder="Search news..."
+                  className={`w-full pl-10 pr-4 py-2 rounded-full border ${
+                    darkMode 
+                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                      : 'bg-white border-gray-300 text-gray-900'
+                  } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
             </div>
             
             <div className="relative group">
@@ -149,10 +181,47 @@ export function Header() {
                 <Moon className="h-5 w-5 text-gray-600" />
               )}
             </button>
+
+            {/* Mobile Menu Toggle */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="sm:hidden p-2"
+            >
+              {mobileMenuOpen ? (
+                <X className={`h-6 w-6 ${darkMode ? 'text-gray-200' : 'text-gray-600'}`} />
+              ) : (
+                <Menu className={`h-6 w-6 ${darkMode ? 'text-gray-200' : 'text-gray-600'}`} />
+              )}
+            </button>
           </div>
         </div>
         
-        <div className="relative flex items-center py-4">
+        {/* Mobile Categories Menu */}
+        <div className={`sm:hidden ${mobileMenuOpen ? 'block' : 'hidden'} py-4`}>
+          <div className="flex flex-wrap gap-2">
+            {categories.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => {
+                  setCategory(cat.id);
+                  setMobileMenuOpen(false);
+                }}
+                className={`px-3 py-1 rounded-full text-sm whitespace-nowrap transition-colors ${
+                  category === cat.id
+                    ? 'bg-blue-600 text-white'
+                    : darkMode
+                      ? 'text-gray-300 hover:bg-gray-700'
+                      : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Desktop Categories Menu */}
+        <div className="relative hidden sm:flex items-center py-4">
           <button
             onClick={() => scroll('left')}
             className={`absolute left-0 z-10 p-2 rounded-full ${

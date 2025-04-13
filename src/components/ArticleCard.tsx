@@ -20,12 +20,12 @@ export function ArticleCard({ article }: ArticleCardProps) {
         <img
           src={article.fields.thumbnail}
           alt={article.webTitle}
-          className="w-full h-48 object-cover"
+          className="w-full h-40 sm:h-48 object-cover"
           loading="lazy"
         />
       )}
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-3">
+      <div className="p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-3">
           <span className={`text-sm ${darkMode ? 'text-blue-400' : 'text-blue-600'} font-medium px-3 py-1 rounded-full ${
             darkMode ? 'bg-blue-900/20' : 'bg-blue-50'
           }`}>
@@ -45,7 +45,7 @@ export function ArticleCard({ article }: ArticleCardProps) {
             </span>
           </div>
         </div>
-        <h2 className={`text-xl font-semibold mb-3 line-clamp-2 ${
+        <h2 className={`text-lg sm:text-xl font-semibold mb-3 line-clamp-2 ${
           darkMode ? 'text-white' : 'text-gray-900'
         }`}>
           {article.webTitle}
@@ -53,7 +53,7 @@ export function ArticleCard({ article }: ArticleCardProps) {
         {article.fields?.bodyText && (
           <p className={`${
             darkMode ? 'text-gray-300' : 'text-gray-600'
-          } mb-4 line-clamp-3 text-base`}>
+          } mb-4 line-clamp-3 text-sm sm:text-base`}>
             {article.fields.bodyText}
           </p>
         )}
@@ -66,7 +66,7 @@ export function ArticleCard({ article }: ArticleCardProps) {
             rel="noopener noreferrer"
             className={`inline-flex items-center ${
               darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-800'
-            } font-medium`}
+            } font-medium text-sm sm:text-base`}
           >
             Read more
             <ExternalLink className="ml-1 h-4 w-4" />

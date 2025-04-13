@@ -18,7 +18,7 @@ export function TopicFilter() {
         <button
           key={topic.id}
           onClick={() => setSelectedTopic(topic.id)}
-          className={`px-4 py-2 rounded-full transition-colors ${
+          className={`px-3 py-1 sm:px-4 sm:py-2 rounded-full text-sm transition-colors ${
             selectedTopic === topic.id
               ? 'bg-blue-600 text-white'
               : darkMode
