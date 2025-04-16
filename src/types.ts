@@ -9,6 +9,8 @@ export interface Article {
   };
   sectionName: string;
   readingTime?: number;
+  translatedTitle?: string;
+  translatedBody?: string;
 }
 
 export interface NewsState {
@@ -22,6 +24,7 @@ export interface NewsState {
   darkMode: boolean;
   bookmarkedArticles: string[];
   bookmarks: Article[];
+  selectedLanguage: string;
   setArticles: (articles: Article[]) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
@@ -29,7 +32,9 @@ export interface NewsState {
   setSearchQuery: (query: string) => void;
   setSelectedCountry: (country: string | null) => void;
   setSelectedTopic: (topic: string) => void;
+  setSelectedLanguage: (language: string) => void;
   toggleDarkMode: () => void;
   toggleBookmark: (article: Article) => void;
   fetchArticles: () => Promise<void>;
+  translateArticle: (article: Article) => Promise<void>;
 }

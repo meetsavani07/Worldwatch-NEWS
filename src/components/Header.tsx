@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Bookmark, Moon, Newspaper, Search, Sun, ChevronLeft, ChevronRight, Menu, X } from 'lucide-react';
+import { Bookmark, Moon, Newspaper, Search, Sun, ChevronLeft, ChevronRight, Menu, X, Globe } from 'lucide-react';
 import { useNewsStore } from '../store';
 import { useEffect, useState, useRef } from 'react';
 
@@ -28,6 +28,36 @@ const categories = [
   { id: 'cryptocurrency', label: 'Cryptocurrency' },
 ];
 
+const languageGroups = [
+  {
+    name: 'Popular',
+    languages: [
+      { code: 'en', name: 'English' },
+      { code: 'es', name: 'Spanish' },
+      { code: 'hi', name: 'Hindi' },
+      { code: 'zh', name: 'Chinese' },
+    ]
+  },
+  {
+    name: 'European',
+    languages: [
+      { code: 'fr', name: 'French' },
+      { code: 'de', name: 'German' },
+      { code: 'it', name: 'Italian' },
+      { code: 'pt', name: 'Portuguese' },
+      { code: 'ru', name: 'Russian' },
+    ]
+  },
+  {
+    name: 'Asian',
+    languages: [
+      { code: 'ja', name: 'Japanese' },
+      { code: 'ko', name: 'Korean' },
+      { code: 'ar', name: 'Arabic' },
+    ]
+  }
+];
+
 export function Header() {
   const { 
     setSearchQuery, 
@@ -35,14 +65,29 @@ export function Header() {
     category, 
     darkMode, 
     toggleDarkMode,
-    bookmarks
+    bookmarks,
+    selectedLanguage,
+    setSelectedLanguage
   } = useNewsStore();
 
   const [prevScrollPos, setPrevScrollPos] = useState(0);
   const [visible, setVisible] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
   const navRef = useRef<HTMLDivElement>(null);
+  const languageButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (languageButtonRef.current && !languageButtonRef.current.contains(event.target as Node)) {
+        setLanguageMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -65,6 +110,14 @@ export function Header() {
     }
   };
 
+  const getCurrentLanguageName = () => {
+    for (const group of languageGroups) {
+      const language = group.languages.find(lang => lang.code === selectedLanguage);
+      if (language) return language.name;
+    }
+    return 'English';
+  };
+
   return (
     <header 
       className={`fixed w-full top-0 z-50 transition-transform duration-300 ${
@@ -81,6 +134,62 @@ export function Header() {
           </Link>
           
           <div className="flex items-center space-x-2 sm:space-x-4">
+            {/* Language Selector */}
+            <div className="relative" ref={languageButtonRef}>
+              <button
+                onClick={() => setLanguageMenuOpen(!languageMenuOpen)}
+                className={`p-2 rounded-lg ${
+                  darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'
+                } flex items-center space-x-2 min-w-[120px] justify-center transition-colors`}
+              >
+                <Globe className={`h-5 w-5 ${darkMode ? 'text-gray-200' : 'text-gray-600'}`} />
+                <span className={`text-sm font-medium ${darkMode ? 'text-gray-200' : 'text-gray-600'}`}>
+                  {getCurrentLanguageName()}
+                </span>
+              </button>
+              
+              {languageMenuOpen && (
+                <div 
+                  className={`absolute right-0 mt-2 w-56 ${
+                    darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+                  } rounded-lg shadow-lg border divide-y ${
+                    darkMode ? 'divide-gray-700' : 'divide-gray-100'
+                  }`}
+                >
+                  {languageGroups.map((group) => (
+                    <div key={group.name} className="py-2">
+                      <div className={`px-4 py-1 text-xs font-semibold ${
+                        darkMode ? 'text-gray-400' : 'text-gray-500'
+                      } uppercase tracking-wider`}>
+                        {group.name}
+                      </div>
+                      {group.languages.map(language => (
+                        <button
+                          key={language.code}
+                          onClick={() => {
+                            setSelectedLanguage(language.code);
+                            setLanguageMenuOpen(false);
+                          }}
+                          className={`w-full text-left px-4 py-2 text-sm flex items-center space-x-2 ${
+                            selectedLanguage === language.code
+                              ? 'bg-blue-600 text-white'
+                              : darkMode
+                                ? 'text-gray-300 hover:bg-gray-700'
+                                : 'text-gray-700 hover:bg-gray-100'
+                          }`}
+                        >
+                          <span>{language.name}</span>
+                          {selectedLanguage === language.code && (
+                            <span className="ml-auto text-xs">✓</span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* Mobile Search Toggle */}
             <button
               onClick={() => setSearchOpen(!searchOpen)}

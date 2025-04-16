@@ -34,6 +34,7 @@ export const useNewsStore = create<NewsState>()(
       darkMode: false,
       bookmarkedArticles: [],
       bookmarks: [],
+      selectedLanguage: 'en',
 
       setArticles: (articles) => set({ articles }),
       setLoading: (loading) => set({ loading }),
@@ -42,6 +43,7 @@ export const useNewsStore = create<NewsState>()(
       setSearchQuery: (query) => set({ searchQuery: query }),
       setSelectedCountry: (country) => set({ selectedCountry: country }),
       setSelectedTopic: (topic) => set({ selectedTopic: topic }),
+      setSelectedLanguage: (language) => set({ selectedLanguage: language }),
       
       toggleDarkMode: () => set((state) => ({ darkMode: !state.darkMode })),
       
@@ -56,6 +58,53 @@ export const useNewsStore = create<NewsState>()(
           bookmarkedArticles: newBookmarks.map(bookmark => bookmark.id)
         };
       }),
+
+      translateArticle: async (article) => {
+        const { selectedLanguage } = get();
+        if (selectedLanguage === 'en') {
+          return;
+        }
+
+        try {
+          const textToTranslate = {
+            title: article.webTitle,
+            body: article.fields?.bodyText || ''
+          };
+
+          const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/translate`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              text: JSON.stringify(textToTranslate),
+              targetLanguage: selectedLanguage
+            })
+          });
+
+          if (!response.ok) {
+            throw new Error('Translation failed');
+          }
+
+          const { translatedText } = await response.json();
+          const translatedData = JSON.parse(translatedText);
+
+          set((state) => ({
+            articles: state.articles.map((a) =>
+              a.id === article.id
+                ? {
+                    ...a,
+                    translatedTitle: translatedData.title,
+                    translatedBody: translatedData.body,
+                  }
+                : a
+            ),
+          }));
+        } catch (error) {
+          console.error('Translation failed:', error);
+        }
+      },
 
       fetchArticles: async () => {
         const { category, searchQuery, selectedCountry, selectedTopic } = get();
@@ -114,7 +163,8 @@ export const useNewsStore = create<NewsState>()(
       partialize: (state) => ({ 
         darkMode: state.darkMode,
         bookmarkedArticles: state.bookmarkedArticles,
-        bookmarks: state.bookmarks
+        bookmarks: state.bookmarks,
+        selectedLanguage: state.selectedLanguage
       }),
     }
   )

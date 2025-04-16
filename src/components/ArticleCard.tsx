@@ -1,14 +1,21 @@
-import { Bookmark, Clock, ExternalLink } from 'lucide-react';
+import { Bookmark, Clock, ExternalLink, Globe } from 'lucide-react';
 import { Article } from '../types';
 import { useNewsStore } from '../store';
+import { useEffect } from 'react';
 
 interface ArticleCardProps {
   article: Article;
 }
 
 export function ArticleCard({ article }: ArticleCardProps) {
-  const { darkMode, bookmarkedArticles, toggleBookmark } = useNewsStore();
+  const { darkMode, bookmarkedArticles, toggleBookmark, selectedLanguage, translateArticle } = useNewsStore();
   const isBookmarked = bookmarkedArticles.includes(article.id);
+
+  useEffect(() => {
+    if (selectedLanguage !== 'en') {
+      translateArticle(article);
+    }
+  }, [selectedLanguage, article, translateArticle]);
 
   return (
     <article className={`${
@@ -48,29 +55,42 @@ export function ArticleCard({ article }: ArticleCardProps) {
         <h2 className={`text-lg sm:text-xl font-semibold mb-3 line-clamp-2 ${
           darkMode ? 'text-white' : 'text-gray-900'
         }`}>
-          {article.webTitle}
+          {article.translatedTitle || article.webTitle}
         </h2>
-        {article.fields?.bodyText && (
+        {(article.translatedBody || article.fields?.bodyText) && (
           <p className={`${
             darkMode ? 'text-gray-300' : 'text-gray-600'
           } mb-4 line-clamp-3 text-sm sm:text-base`}>
-            {article.fields.bodyText}
+            {article.translatedBody || article.fields.bodyText}
           </p>
         )}
         <div className="flex items-center justify-between mt-4 pt-4 border-t ${
           darkMode ? 'border-gray-700' : 'border-gray-100'
         }">
-          <a
-            href={article.webUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`inline-flex items-center ${
-              darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-800'
-            } font-medium text-sm sm:text-base`}
-          >
-            Read more
-            <ExternalLink className="ml-1 h-4 w-4" />
-          </a>
+          <div className="flex items-center space-x-4">
+            <a
+              href={article.webUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`inline-flex items-center ${
+                darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-800'
+              } font-medium text-sm sm:text-base`}
+            >
+              Read more
+              <ExternalLink className="ml-1 h-4 w-4" />
+            </a>
+            {selectedLanguage !== 'en' && (
+              <button
+                onClick={() => translateArticle(article)}
+                className={`flex items-center ${
+                  darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-gray-800'
+                }`}
+              >
+                <Globe className="h-4 w-4 mr-1" />
+                <span className="text-sm">Translate</span>
+              </button>
+            )}
+          </div>
           <button
             onClick={() => toggleBookmark(article)}
             className={`p-2 rounded-full transition-colors ${
