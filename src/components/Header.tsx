@@ -67,7 +67,8 @@ export function Header() {
     toggleDarkMode,
     bookmarks,
     selectedLanguage,
-    setSelectedLanguage
+    setSelectedLanguage,
+    fetchArticles
   } = useNewsStore();
 
   const [prevScrollPos, setPrevScrollPos] = useState(0);
@@ -118,6 +119,12 @@ export function Header() {
     return 'English';
   };
 
+  const handleLanguageChange = async (languageCode: string) => {
+    setSelectedLanguage(languageCode);
+    setLanguageMenuOpen(false);
+    await fetchArticles(); // Refetch articles when language changes
+  };
+
   return (
     <header 
       className={`fixed w-full top-0 z-50 transition-transform duration-300 ${
@@ -154,7 +161,7 @@ export function Header() {
                     darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
                   } rounded-lg shadow-lg border divide-y ${
                     darkMode ? 'divide-gray-700' : 'divide-gray-100'
-                  }`}
+                  } z-50`}
                 >
                   {languageGroups.map((group) => (
                     <div key={group.name} className="py-2">
@@ -166,10 +173,7 @@ export function Header() {
                       {group.languages.map(language => (
                         <button
                           key={language.code}
-                          onClick={() => {
-                            setSelectedLanguage(language.code);
-                            setLanguageMenuOpen(false);
-                          }}
+                          onClick={() => handleLanguageChange(language.code)}
                           className={`w-full text-left px-4 py-2 text-sm flex items-center space-x-2 ${
                             selectedLanguage === language.code
                               ? 'bg-blue-600 text-white'
@@ -218,7 +222,7 @@ export function Header() {
               darkMode ? 'bg-gray-800' : 'bg-white'
             } border-b ${
               darkMode ? 'border-gray-700' : 'border-gray-200'
-            } ${searchOpen ? 'block' : 'hidden'} sm:hidden`}>
+            } ${searchOpen ? 'block' : 'hidden'} sm:hidden z-50`}>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                 <input
@@ -251,7 +255,7 @@ export function Header() {
               {bookmarks.length > 0 && (
                 <div className={`absolute right-0 mt-2 w-72 ${
                   darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-                } rounded-lg shadow-lg hidden group-hover:block border`}>
+                } rounded-lg shadow-lg hidden group-hover:block border z-50`}>
                   <div className="p-4">
                     <h3 className={`font-semibold mb-2 ${
                       darkMode ? 'text-white' : 'text-gray-900'
