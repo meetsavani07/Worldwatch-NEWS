@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@react-aria/button": "^3.13.0",
+    "dotenv": "^17.2.1",
     "lucide-react": "^0.487.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

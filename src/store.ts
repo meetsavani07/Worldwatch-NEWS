@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { NewsState } from './types';
 
-const NEWS_API_KEY = '31162a97622f4ce98943e15f659d10ca'; // You'll need to get this from newsapi.org
+const NEWS_API_KEY = 'your-newsapi-key-here'; // You'll need to get this from newsapi.org
 const API_URL = 'https://newsapi.org/v2';
 
 const countryMap: { [key: string]: string } = {
@@ -176,24 +176,17 @@ export const useNewsStore = create<NewsState>()(
         set({ loading: true, error: null });
 
         try {
-          let endpoint = `${API_URL}/top-headlines?apiKey=${NEWS_API_KEY}`;
+          let endpoint = `${API_URL}/top-headlines`;
           const params = new URLSearchParams({
+            'apiKey': NEWS_API_KEY,
             'pageSize': '50',
+            'language': 'en',
           });
 
-          // Handle country selection first
-          if (selectedCountry && countryMap[selectedCountry]) {
-            params.append('country', countryMap[selectedCountry]);
-            console.log(`Fetching news for country: ${selectedCountry} (${countryMap[selectedCountry]})`);
-          } else if (!searchQuery && selectedTopic === 'all') {
-            // Default to US if no country selected and no search
-            params.append('country', 'us');
-          }
-
-          // Use everything endpoint for search queries or topics
+          // Use everything endpoint for search queries
           if (searchQuery || selectedTopic !== 'all') {
-            endpoint = `${API_URL}/everything?apiKey=${NEWS_API_KEY}`;
-            params.delete('country'); // everything endpoint doesn't support country parameter
+            endpoint = `${API_URL}/everything`;
+            params.delete('language'); // everything endpoint doesn't use language param
             
             if (searchQuery) {
               params.append('q', searchQuery);
@@ -208,25 +201,23 @@ export const useNewsStore = create<NewsState>()(
             // Sort by publishedAt for everything endpoint
             params.append('sortBy', 'publishedAt');
           } else {
-            // Add language for top-headlines
-            params.append('language', 'en');
-
+            // Use top-headlines endpoint for country-specific news
+            if (selectedCountry && countryMap[selectedCountry]) {
+              params.append('country', countryMap[selectedCountry]);
+            } else {
+              params.append('country', 'us'); // Default to US
+            }
+            
             if (category !== 'all' && categoryMap[category]) {
               params.append('category', categoryMap[category]);
             }
           }
 
-          const response = await fetch(`${endpoint}&${params.toString()}`);
-          
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-          }
-          
+          const response = await fetch(`${endpoint}?${params}`);
           const data = await response.json();
 
-          if (data.status === 'error') {
-            throw new Error(data.message || 'Failed to fetch articles');
+          if (!response.ok) {
+            throw new Error(data.message || `Failed to fetch articles: ${data.code}`);
           }
 
           const formattedArticles = data.articles
@@ -243,13 +234,11 @@ export const useNewsStore = create<NewsState>()(
             sectionName: article.source?.name || 'News',
             readingTime: article.content 
               ? Math.ceil(article.content.split(' ').length / 200)
-              : Math.ceil((article.description || '').split(' ').length / 200)
+              : undefined
           }));
 
-          console.log(`Fetched ${formattedArticles.length} articles`);
           set({ articles: formattedArticles, loading: false });
         } catch (error) {
-          console.error('Error fetching articles:', error);
           set({ error: (error as Error).message, loading: false });
         }
       },
