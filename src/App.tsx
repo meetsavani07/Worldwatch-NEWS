@@ -17,7 +17,8 @@ function App() {
     searchQuery, 
     selectedCountry, 
     selectedTopic,
-    darkMode 
+    darkMode,
+    setSelectedCountry
   } = useNewsStore();
 
   useEffect(() => {
@@ -45,6 +46,16 @@ function App() {
                 <h2 className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                   News from {selectedCountry}
                 </h2>
+                <button
+                  onClick={() => setSelectedCountry(null)}
+                  className={`ml-2 px-3 py-1 text-sm rounded-full ${
+                    darkMode 
+                      ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
+                      : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                  }`}
+                >
+                  Clear
+                </button>
               </div>
             )}
             

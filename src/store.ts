@@ -2,23 +2,88 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { NewsState } from './types';
 
-const GUARDIAN_API_KEY = '09c1417b-2a71-42b1-85b4-747fd0d2fcf9';
-const API_URL = 'https://content.guardianapis.com/search';
+const NEWS_API_KEY = '31162a97622f4ce98943e15f659d10ca'; // You'll need to get this from newsapi.org
+const API_URL = 'https://newsapi.org/v2';
 
 const countryMap: { [key: string]: string } = {
   'United States': 'us',
-  'United Kingdom': 'uk',
-  'France': 'france',
-  'Germany': 'germany',
-  'Italy': 'italy',
-  'Spain': 'spain',
-  'Russia': 'russia',
-  'China': 'china',
-  'Japan': 'japan',
-  'India': 'india',
-  'Brazil': 'brazil',
-  'Canada': 'canada',
-  'Australia': 'australia',
+  'United Kingdom': 'gb',
+  'France': 'fr',
+  'Germany': 'de',
+  'Italy': 'it',
+  'Spain': 'es',
+  'Russia': 'ru',
+  'China': 'cn',
+  'Japan': 'jp',
+  'India': 'in',
+  'Brazil': 'br',
+  'Canada': 'ca',
+  'Australia': 'au',
+  'Argentina': 'ar',
+  'Austria': 'at',
+  'Belgium': 'be',
+  'Bulgaria': 'bg',
+  'Czech Republic': 'cz',
+  'Egypt': 'eg',
+  'Greece': 'gr',
+  'Hong Kong': 'hk',
+  'Hungary': 'hu',
+  'Indonesia': 'id',
+  'Ireland': 'ie',
+  'Israel': 'il',
+  'Latvia': 'lv',
+  'Lithuania': 'lt',
+  'Malaysia': 'my',
+  'Mexico': 'mx',
+  'Morocco': 'ma',
+  'Netherlands': 'nl',
+  'New Zealand': 'nz',
+  'Nigeria': 'ng',
+  'Norway': 'no',
+  'Philippines': 'ph',
+  'Poland': 'pl',
+  'Portugal': 'pt',
+  'Romania': 'ro',
+  'Saudi Arabia': 'sa',
+  'Serbia': 'rs',
+  'Singapore': 'sg',
+  'Slovakia': 'sk',
+  'Slovenia': 'si',
+  'South Africa': 'za',
+  'South Korea': 'kr',
+  'Sweden': 'se',
+  'Switzerland': 'ch',
+  'Taiwan': 'tw',
+  'Thailand': 'th',
+  'Turkey': 'tr',
+  'Ukraine': 'ua',
+  'United Arab Emirates': 'ae',
+  'Venezuela': 've',
+};
+
+const categoryMap: { [key: string]: string } = {
+  'all': '',
+  'technology': 'technology',
+  'sports': 'sports',
+  'entertainment': 'entertainment',
+  'business': 'business',
+  'health': 'health',
+  'science': 'science',
+  'politics': 'general',
+  'environment': 'science',
+  'education': 'general',
+  'fashion': 'entertainment',
+  'food': 'entertainment',
+  'travel': 'entertainment',
+  'culture': 'entertainment',
+  'music': 'entertainment',
+  'art': 'entertainment',
+  'books': 'entertainment',
+  'film': 'entertainment',
+  'gaming': 'technology',
+  'automotive': 'technology',
+  'real-estate': 'business',
+  'cryptocurrency': 'business',
 };
 
 export const useNewsStore = create<NewsState>()(
@@ -111,49 +176,80 @@ export const useNewsStore = create<NewsState>()(
         set({ loading: true, error: null });
 
         try {
+          let endpoint = `${API_URL}/top-headlines?apiKey=${NEWS_API_KEY}`;
           const params = new URLSearchParams({
-            'api-key': GUARDIAN_API_KEY,
-            'show-fields': 'thumbnail,bodyText',
-            'page-size': '50',
+            'pageSize': '50',
           });
 
-          if (searchQuery) {
-            params.append('q', searchQuery);
-          }
-
+          // Handle country selection first
           if (selectedCountry && countryMap[selectedCountry]) {
-            params.append('q', countryMap[selectedCountry]);
+            params.append('country', countryMap[selectedCountry]);
+            console.log(`Fetching news for country: ${selectedCountry} (${countryMap[selectedCountry]})`);
+          } else if (!searchQuery && selectedTopic === 'all') {
+            // Default to US if no country selected and no search
+            params.append('country', 'us');
           }
 
-          if (category !== 'all') {
-            params.append('section', category.toLowerCase());
+          // Use everything endpoint for search queries or topics
+          if (searchQuery || selectedTopic !== 'all') {
+            endpoint = `${API_URL}/everything?apiKey=${NEWS_API_KEY}`;
+            params.delete('country'); // everything endpoint doesn't support country parameter
+            
+            if (searchQuery) {
+              params.append('q', searchQuery);
+            }
+            
+            if (selectedTopic !== 'all') {
+              const existingQuery = params.get('q') || '';
+              const topicQuery = existingQuery ? `${existingQuery} AND ${selectedTopic}` : selectedTopic;
+              params.set('q', topicQuery);
+            }
+            
+            // Sort by publishedAt for everything endpoint
+            params.append('sortBy', 'publishedAt');
+          } else {
+            // Add language for top-headlines
+            params.append('language', 'en');
+
+            if (category !== 'all' && categoryMap[category]) {
+              params.append('category', categoryMap[category]);
+            }
           }
 
-          if (selectedTopic !== 'all') {
-            params.append('q', selectedTopic);
+          const response = await fetch(`${endpoint}&${params.toString()}`);
+          
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
           }
-
-          const response = await fetch(`${API_URL}?${params}`);
+          
           const data = await response.json();
 
-          if (!response.ok) {
+          if (data.status === 'error') {
             throw new Error(data.message || 'Failed to fetch articles');
           }
 
-          const formattedArticles = data.response.results.map((article: any) => ({
-            id: article.id,
-            webTitle: article.webTitle,
-            webUrl: article.webUrl,
-            webPublicationDate: article.webPublicationDate,
-            fields: article.fields,
-            sectionName: article.sectionName,
-            readingTime: article.fields?.bodyText 
-              ? Math.ceil(article.fields.bodyText.split(' ').length / 200)
-              : undefined
+          const formattedArticles = data.articles
+            .filter((article: any) => article.title && article.title !== '[Removed]')
+            .map((article: any) => ({
+            id: article.url, // Use URL as unique ID
+            webTitle: article.title,
+            webUrl: article.url,
+            webPublicationDate: article.publishedAt,
+            fields: {
+              thumbnail: article.urlToImage,
+              bodyText: article.description || article.content,
+            },
+            sectionName: article.source?.name || 'News',
+            readingTime: article.content 
+              ? Math.ceil(article.content.split(' ').length / 200)
+              : Math.ceil((article.description || '').split(' ').length / 200)
           }));
 
+          console.log(`Fetched ${formattedArticles.length} articles`);
           set({ articles: formattedArticles, loading: false });
         } catch (error) {
+          console.error('Error fetching articles:', error);
           set({ error: (error as Error).message, loading: false });
         }
       },

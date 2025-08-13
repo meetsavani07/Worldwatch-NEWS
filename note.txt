@@ -1,2 +1,0 @@
-GUARDIAN_API_KEY = '09c1417b-2a71-42b1-85b4-747fd0d2fcf9';
-API_URL = 'https://content.guardianapis.com/search?api-key=09c1417b-2a71-42b1-85b4-747fd0d2fcf9';

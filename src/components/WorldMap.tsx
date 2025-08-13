@@ -199,7 +199,6 @@ const supportedCountries = [
   { name: 'Zambia', coords: [-13.133897, 27.849332] },
   { name: 'Zimbabwe', coords: [-19.015438, 29.154857] },
 ];
-
 const WorldMap = () => {
   const { selectedCountry, setSelectedCountry, darkMode } = useNewsStore();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -249,14 +248,21 @@ const WorldMap = () => {
               fillOpacity: 0.8,
               color: darkMode ? '#4B5563' : '#ffffff',
               weight: 2,
+              className: 'cursor-pointer'
             }}
           >
-            <Tooltip>{country.name}</Tooltip>
+            <Tooltip>
+              <div className="text-center">
+                <div className="font-semibold">{country.name}</div>
+                <div className="text-xs opacity-75">Click for news</div>
+              </div>
+            </Tooltip>
           </CircleMarker>
         ))}
       </MapContainer>
     </div>
   );
 };
+
 
 export default WorldMap;
